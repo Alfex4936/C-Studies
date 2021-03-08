@@ -7,8 +7,15 @@ from selectolax.parser import HTMLParser
 
 
 class Ajou:
-    @staticmethod
-    def parse(limit=None):
+    __slots__ = ("notices",)
+
+    def __init__(self):
+        self.notices = []
+
+    def __len__(self):
+        return len(self.notices)
+
+    def parse(self, limit=None):
         ADDRESS = "https://www.ajou.ac.kr/kr/ajou/notice.do"
         if limit is None:
             limit = 30
@@ -52,7 +59,79 @@ class Ajou:
         dates = soup.css("span.b-date")
         writers = soup.css("span.b-writer")
 
-        print("Successfully called:", length)
-        print("Posts:", posts[0].text(strip=True))
-        return ids, posts, dates, writers, length
+        notices = [
+            Notice(
+                ids[i].text(strip=True),
+                posts[i].text(strip=True),
+                dates[i].text(strip=True),
+                writers[i].text(strip=False),
+                ADDRESS + posts[i].attributes["href"],
+            )
+            for i in range(length)
+        ]  # memory
+
+        self.notices = notices
+
+        return notices, length
+
+    def print(self):
+        for i in range(len(self)):
+            print("ID:", self.notices[i].id)
+            print("Title:", self.notices[i].title)
+            print("Posted date:", self.notices[i].date)
+            print("Writer:", self.notices[i].writer)
+            print("Link:", self.notices[i].link[51:])
+
+
+class Notice:
+    ADDRESS = "https://www.ajou.ac.kr/kr/ajou/notice.do"
+
+    __slots__ = ("_id", "_post", "_date", "_link", "_writer", "_link")
+
+    def __init__(self, id, post, date, writer, link):
+        self._id = id
+        self._post = post
+        self._date = date
+        self._writer = writer
+        self._link = link
+
+    @property
+    def id(self):
+        return self._id
+
+    @id.setter
+    def id(self, id):
+        self._id = id
+
+    @property
+    def title(self):
+        return self._post
+
+    @title.setter
+    def title(self, title):
+        self._post = title
+
+    @property
+    def date(self):
+        return self._date
+
+    @date.setter
+    def date(self, date):
+        self._date = date
+
+    @property
+    def writer(self):
+        return self._writer
+
+    @writer.setter
+    def writer(self, writer):
+        self._writer = writer
+
+    @property
+    def link(self):
+        return self._link
+
+    @link.setter
+    def link(self, link):
+        self._link = link
 

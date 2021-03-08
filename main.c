@@ -5,18 +5,19 @@
 int main(int argc, char *argv[]) // 나중에 argument로 파일, function 이름 넘길 수 있도록
 {
     // Borrowed objects
-    PyObject *pName, *pModule, *pDict, *pClass, *pFunc, *pValue, *object;
+    PyObject *sys, *path;
+    PyObject *pName, *pModule, *pDict, *pClass, *pFunc, *pFunctionResult, *object;
 
     Py_Initialize();
 
     // 파이썬 모듈 위치를 알려주고, 내 파이썬 site-packages 경로를 추가해준다.
-    PyObject *sys = PyImport_ImportModule("sys");
-    PyObject *path = PyObject_GetAttrString(sys, "path");
+    sys = PyImport_ImportModule("sys");
+    path = PyObject_GetAttrString(sys, "path");
 
     PyList_Append(path, PyUnicode_FromString("."));
     PyList_Append(path, PyUnicode_FromString(getenv("THRID_PACKAGES")));
 
-    // Import the module
+    // Import my helper.py
     pName = PyUnicode_FromString((char *)"helper");
     if (!pName)
     {
@@ -48,19 +49,46 @@ int main(int argc, char *argv[]) // 나중에 argument로 파일, function 이�
     }
 
     // pValue = Ajou.parse란 함수의 결과로 Tuple이며, integer (보고 싶은 공지 갯수)
-    pValue = PyObject_CallMethod(object, "parse", "(i)", 5);
-    if (!pValue)
+    pFunctionResult = PyObject_CallMethod(object, "parse", "(i)", 2);
+    if (!pFunctionResult)
         PyErr_Print();
+    printf("PyTuple_Check(parse()) = %d\n", PyTuple_Check(pFunctionResult));
 
-    // Clean up
+    PyObject *pNotices = PyTuple_GetItem(pFunctionResult, 0);
+    int length = (int)PyLong_AsLong(PyTuple_GetItem(pFunctionResult, 1));
+    printf("Length of notices = %d\n", length);
+
+    PyObject *pNotice, *pTitle;
+
+    for (size_t i = 0; i < length; i++)
+    {
+        pNotice = PyList_GetItem(pNotices, i);
+        pTitle = PyUnicode_AsEncodedString(PyObject_GetAttrString(pNotice, "title"), "utf-8", "strict");
+        char *cTitle = PyBytes_AsString(pTitle);
+        if (cTitle)
+        {
+            printf("Title: %s\n", cTitle);
+        }
+    }
+
+    // pFunctionResult = PyObject_CallMethod(object, "print", NULL, NULL);
+    // if (!pFunctionResult)
+    //     PyErr_Print();
+
+    // ! Clean up ! //
+
     // Py_DECREF, Py_XDECREF는 borrowed object면 해줘야한다.
     // Py_XDECREF는 NULL일 수도 있을 때 사용되며, NULL이 아니라면 Py_DECREF 부르는 것이 빠르다.
     Py_DECREF(sys);
     Py_DECREF(path);
-
-    Py_DECREF(pValue);
+    Py_DECREF(pFunctionResult);
     Py_DECREF(pName);
     Py_DECREF(pModule);
+
+    // 공지 Objects
+    Py_DECREF(pNotices);
+    Py_DECREF(pNotice);
+    Py_DECREF(pTitle);
 
     Py_DECREF(pClass);
     Py_DECREF(pDict);

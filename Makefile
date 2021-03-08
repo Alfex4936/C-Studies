@@ -3,7 +3,8 @@ CFLAGS	=
 LDFLAGS	=
 
 build:
-	gcc main.c -I C:\Users\ccjoo\Anaconda3\include -LC:\Users\ccjoo\Anaconda3\libs -lpython37 -o main.exe
+	chcp 65001 > NUL& gcc main.c -I Anaconda3\include -LAnaconda3\libs -lpython37 -o main.exe
+	./main
 
 .PHONY: clean
 clean:
