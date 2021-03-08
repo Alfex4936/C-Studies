@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) // 나중에 argument로 파일, function 이�
     }
 
     // pValue = Ajou.parse란 함수의 결과로 Tuple이며, integer (보고 싶은 공지 갯수)
-    pFunctionResult = PyObject_CallMethod(object, "parse", "(i)", 2);
+    pFunctionResult = PyObject_CallMethod(object, "parse", "(i)", 15);
     if (!pFunctionResult)
         PyErr_Print();
     printf("PyTuple_Check(parse()) = %d\n", PyTuple_Check(pFunctionResult));
@@ -58,19 +58,33 @@ int main(int argc, char *argv[]) // 나중에 argument로 파일, function 이�
     int length = (int)PyLong_AsLong(PyTuple_GetItem(pFunctionResult, 1));
     printf("Length of notices = %d\n", length);
 
-    PyObject *pNotice, *pTitle;
+    PyObject *pNotice, *pTitle, *pDate, *pWriter;
 
     for (size_t i = 0; i < length; i++)
     {
         pNotice = PyList_GetItem(pNotices, i);
         pTitle = PyUnicode_AsEncodedString(PyObject_GetAttrString(pNotice, "title"), "utf-8", "strict");
+        pDate = PyUnicode_AsEncodedString(PyObject_GetAttrString(pNotice, "date"), "utf-8", "strict");
+        pWriter = PyUnicode_AsEncodedString(PyObject_GetAttrString(pNotice, "writer"), "utf-8", "strict");
+
         char *cTitle = PyBytes_AsString(pTitle);
-        if (cTitle)
+        char *cDate = PyBytes_AsString(pDate);
+        char *cWriter = PyBytes_AsString(pWriter);
+        if (cTitle && cDate && cWriter)
         {
             printf("Title: %s\n", cTitle);
+            printf("Date: %s\n", cDate);
+            printf("Writer: %s\n", cWriter);
         }
     }
 
+    pFunctionResult = PyObject_CallMethod(object, "getHTML", "(s)", "https://curl.se/libcurl/");
+    if (!pFunctionResult)
+        PyErr_Print();
+    PyObject *pHTML = PyUnicode_AsEncodedString(pFunctionResult, "utf-8", "strict");
+    char *html = PyBytes_AsString(pHTML);
+    printf("\n%s\n", html);
+    Py_DECREF(pHTML);
     // pFunctionResult = PyObject_CallMethod(object, "print", NULL, NULL);
     // if (!pFunctionResult)
     //     PyErr_Print();
@@ -81,6 +95,8 @@ int main(int argc, char *argv[]) // 나중에 argument로 파일, function 이�
     // Py_XDECREF는 NULL일 수도 있을 때 사용되며, NULL이 아니라면 Py_DECREF 부르는 것이 빠르다.
     Py_DECREF(sys);
     Py_DECREF(path);
+    Py_DECREF(object);
+
     Py_DECREF(pFunctionResult);
     Py_DECREF(pName);
     Py_DECREF(pModule);
@@ -89,6 +105,8 @@ int main(int argc, char *argv[]) // 나중에 argument로 파일, function 이�
     Py_DECREF(pNotices);
     Py_DECREF(pNotice);
     Py_DECREF(pTitle);
+    Py_DECREF(pDate);
+    Py_DECREF(pWriter);
 
     Py_DECREF(pClass);
     Py_DECREF(pDict);

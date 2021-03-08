@@ -1,9 +1,17 @@
 import ssl
 
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
 
 from selectolax.parser import HTMLParser
+
+
+class AjouException(Exception):
+    __module__ = Exception.__module__
+
+    def __init__(self, msg="Exception!"):
+        self.msg = msg
+        super().__init__(self.msg)
 
 
 class Ajou:
@@ -14,6 +22,26 @@ class Ajou:
 
     def __len__(self):
         return len(self.notices)
+
+    @staticmethod
+    def getHTML(url=None):
+        if url is None:
+            raise AjouException("Please enter URL to get HTML contents")
+        context = ssl._create_unverified_context()
+        try:
+            result = urlopen(url, timeout=5.0, context=context)
+        except HTTPError:
+            print("Seems like the server is down now.")
+            return None
+        except TimeoutError:
+            print("It's taking too long to load website.")
+            return None
+        except URLError:
+            print("Wrong url to parse")
+            return None
+
+        html = result.read().decode("utf-8")
+        return html
 
     def parse(self, limit=None):
         ADDRESS = "https://www.ajou.ac.kr/kr/ajou/notice.do"
@@ -75,6 +103,8 @@ class Ajou:
         return notices, length
 
     def print(self):
+        if not self:
+            raise AjouException("Please run parse() before print()")
         for i in range(len(self)):
             print("ID:", self.notices[i].id)
             print("Title:", self.notices[i].title)
@@ -135,3 +165,7 @@ class Notice:
     def link(self, link):
         self._link = link
 
+
+if __name__ == "__main__":
+    ajou = Ajou()
+    ajou.getHTML("https://www.programiz.com/python-programming/user-defined-exception")
