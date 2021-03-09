@@ -64,3 +64,47 @@ if (!pValue)
 
 // Clean up...
 ```
+
+## C언어 Kore 웹프레임워크 JSON 만들기
+
+Simple Example of using JSON in Kore web framework.
+
+```c
+struct kore_json_item *build_simple_text(char *msg)
+{
+    struct kore_json_item *json;
+    struct kore_json_item *template;
+    struct kore_json_item *outputs;
+    struct kore_json_item *simpleTextOuter;
+    struct kore_json_item *simpleText;
+    struct kore_json_item *text;
+
+    json = kore_json_create_object(NULL, NULL);
+
+    template = kore_json_create_object(json, "template");
+    outputs = kore_json_create_array(template, "outputs");
+    simpleTextOuter = kore_json_create_object(outputs, NULL);
+    simpleText = kore_json_create_object(simpleTextOuter, "simpleText");
+    text = kore_json_create_object(simpleText, NULL);
+    kore_json_create_string(text, "text", msg); // 마지막으로 text 만들기
+
+    kore_json_create_string(json, "version", "2.0");
+
+    return json;
+}
+
+... main()
+struct kore_json_item *json;
+json = build_simple_text("First SimpleText!");
+kore_json_item_tobuf(json, &buf);
+char *answer = kore_buf_stringify(&buf, NULL);
+
+// 항상 JSON response
+http_response_header(req, "Content-Type", "application/json; charset=utf-8");
+
+// answer = JSON 데이터
+http_response(req, 200, answer, strlen(answer));
+
+kore_buf_cleanup(&buf);
+kore_json_item_free(json);
+```

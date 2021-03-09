@@ -5,3 +5,4 @@ server.so
 assets.h
 cert
 dh2048.pem
+kore.pid
